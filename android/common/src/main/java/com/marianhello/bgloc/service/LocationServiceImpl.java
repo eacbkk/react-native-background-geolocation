@@ -333,6 +333,9 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
                 case CommandId.START_HEADLESS_TASK:
                     startHeadlessTask();
                     break;
+                case CommandId.LOCATION:
+                    updateLocationFromBroadcast((BackgroundLocation) arg);
+                    break;
             }
         } catch (Exception e) {
             logger.error("processCommand: exception", e);
@@ -399,6 +402,13 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
 
     @Override
     public void startForeground() {
+        final Config currentConfig = mConfig;
+
+        if (currentConfig.getStartForeground() == false&&currentConfig.getLocationProvider() == Config.ACTIVITY_PROVIDER) {
+            logger.debug("Dont run in foreground for ACTIVITY Provider");
+            return;
+        }
+
         if (sIsRunning && !mIsInForeground) {
             Config config = getConfig();
             Notification notification = new NotificationHelper.NotificationFactory(this).getNotification(
@@ -484,6 +494,11 @@ public class LocationServiceImpl extends Service implements ProviderDelegate, Lo
                 }
             }
         });
+    }
+
+    @Override
+    public void updateLocationFromBroadcast(BackgroundLocation location) {
+        onLocation(location);
     }
 
     @Override

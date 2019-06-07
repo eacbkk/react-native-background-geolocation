@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.marianhello.bgloc.Config;
+import com.marianhello.bgloc.data.BackgroundLocation;
 
 public class LocationServiceProxy implements LocationService, LocationServiceInfo {
     private final Context mContext;
@@ -19,6 +20,14 @@ public class LocationServiceProxy implements LocationService, LocationServiceInf
     public void configure(Config config) {
         Intent intent = mIntentBuilder
                 .setCommand(CommandId.CONFIGURE, config)
+                .build();
+        executeIntentCommand(intent);
+    }
+
+    @Override
+    public void updateLocationFromBroadcast(BackgroundLocation location) {
+        Intent intent = mIntentBuilder
+                .setCommand(CommandId.LOCATION, location)
                 .build();
         executeIntentCommand(intent);
     }

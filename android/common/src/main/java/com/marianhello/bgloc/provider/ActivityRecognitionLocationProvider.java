@@ -21,8 +21,10 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.marianhello.bgloc.Config;
 import com.marianhello.bgloc.data.BackgroundActivity;
+import com.marianhello.bgloc.receivers.LocationUpdatesBroadcastReceiver;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ActivityRecognitionLocationProvider extends AbstractLocationProvider implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
@@ -108,6 +110,12 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
         };
     }
 
+    private PendingIntent getPendingIntent(Context context) {
+        Intent intent = new Intent(context, LocationUpdatesBroadcastReceiver.class);
+        intent.setAction(LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES);
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
 
     public void startTracking() {
         if (isTracking) { return; }
@@ -117,7 +125,7 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
                 .setFastestInterval(mConfig.getFastestInterval()).setInterval(mConfig.getInterval())
                 .setSmallestDisplacement(mConfig.getStationaryRadius());
         try {
-            LocationServices.getFusedLocationProviderClient(mContext).requestLocationUpdates(locationRequest,locationCallback,null);
+            LocationServices.getFusedLocationProviderClient(mContext).requestLocationUpdates(locationRequest,getPendingIntent(mContext));
             isTracking = true;
             logger.debug("Start tracking with broadcast  priority={} fastestInterval={} interval={} activitiesInterval={} stopOnStillActivity={}", priority, mConfig.getFastestInterval(), mConfig.getInterval(), mConfig.getActivitiesInterval(), mConfig.getStopOnStillActivity());
         } catch (SecurityException e) {
@@ -129,7 +137,7 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
     public void stopTracking() {
         if (!isTracking) { return; }
 
-        LocationServices.getFusedLocationProviderClient(mContext).removeLocationUpdates(locationCallback);
+        LocationServices.getFusedLocationProviderClient(mContext).removeLocationUpdates(getPendingIntent(mContext));
         isTracking = false;
     }
 
@@ -236,6 +244,15 @@ public class ActivityRecognitionLocationProvider extends AbstractLocationProvide
             }
         }
         return mostLikelyActivity;
+    }
+
+    public void handleLocationFromBroadcast(Location location){
+        logger.debug("Location change on locationUpdatesBroadcastReceiver: {}", location.toString());
+
+        showDebugToast("acy:" + location.getAccuracy() + ",v:" + location.getSpeed());
+
+        lastLocation = location;
+        handleLocation(location);
     }
 
     private BroadcastReceiver detectedActivitiesReceiver = new BroadcastReceiver() {
