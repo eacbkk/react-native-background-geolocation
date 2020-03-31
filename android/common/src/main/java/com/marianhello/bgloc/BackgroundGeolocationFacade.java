@@ -52,11 +52,24 @@ public class BackgroundGeolocationFacade {
     public static final int AUTHORIZATION_AUTHORIZED = 1;
     public static final int AUTHORIZATION_DENIED = 0;
 
-    public static final String[] PERMISSIONS = {
+    /**
+     * Permissions for below SDK level Q
+     */
+    public static final String[] PERMISSIONS_BELOW_Q = {
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION
     };
+
+    /**
+     * Permissions for upper SDK level Q
+     */
+    public static final String[] PERMISSIONS_Q = {
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+    };
+
+    public static final String[] PERMISSIONS = (Build.VERSION.SDK_INT>= Build.VERSION_CODES.Q)? PERMISSIONS_Q : PERMISSIONS_BELOW_Q;
 
     private boolean mServiceBroadcastReceiverRegistered = false;
     private boolean mLocationModeChangeReceiverRegistered = false;
